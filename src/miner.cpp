@@ -1,3 +1,4 @@
+#include "miner.h"
 #include "utils.h"
 #include "krist.h"
 
@@ -7,11 +8,9 @@
 #include <thread>
 #include <random>
 #include <fstream>
+#include <hdf5.h>
 
-std::vector<std::string> g_terms;
-bool g_miner_running = false;
-
-std::vector<std::shared_ptr<std::thread>> g_threads;
+miner_context_t g_miner_ctx;
 
 bool load_terms(const std::string &file) {
     std::ifstream in(file, std::ios::in);
@@ -24,7 +23,7 @@ bool load_terms(const std::string &file) {
 
     while (std::getline(in, line)) {
         if (!line.empty()) {
-            g_terms.push_back(line);
+            g_miner_ctx.terms.push_back(line);
         }
     }
 
@@ -39,14 +38,14 @@ uint64_t gen_base_pass() {
 }
 
 void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count, bool do_v1, bool clean_output, bool no_numbers) {
-    if (!clean_output) {
+    if (!g_miner_ctx.params.clean_output) {
         std::ostringstream greeting;
         greeting << "Started thread " << thread_id << ", working from " << std::hex << base_pass << " to " << std::hex
                  << (base_pass + addr_count);
         std::cout << greeting.str() << std::endl;
     }
 
-    for (uint64_t current = base_pass; g_miner_running && current < base_pass + addr_count; ++current) {
+    for (uint64_t current = base_pass; g_miner_ctx.running && current < base_pass + addr_count; ++current) {
         std::ostringstream ss;
         ss << std::hex << current;
 
@@ -67,7 +66,7 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
             }
         }
 
-        for (const std::string &term : g_terms) {
+        for (const std::string &term : g_miner_ctx.terms) {
             if (address.find(term) != std::string::npos) {
                 if (clean_output) {
                     std::ostringstream msg;
@@ -83,31 +82,32 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
     }
 }
 
-void start_miner(uint64_t base_pass, unsigned int thread_count, bool do_v1, bool clean_output, bool no_numbers) {
-    if (!clean_output) {
+void start_miner() {
+    if (!g_miner_ctx.params.clean_output) {
         std::string base_pass_str;
-        to_hex_string(base_pass, &base_pass_str);
-        std::cout << "Using \"" << base_pass_str << "\" (" << base_pass << ") as base\n";
+        to_hex_string(g_miner_ctx.params.base_pass, &base_pass_str);
+        std::cout << "Using \"" << base_pass_str << "\" as base\n";
     }
 
-    g_miner_running = true;
-    g_threads.reserve((size_t)thread_count);
+    g_miner_ctx.running = true;
+    g_miner_ctx.threads.reserve((size_t)g_miner_ctx.params.thread_count);
 
-    uint64_t work_size = UINT64_MAX - base_pass;
-    uint64_t work_size_per_thread = work_size / thread_count;
+    uint64_t work_size = UINT64_MAX - g_miner_ctx.params.base_pass;
+    uint64_t work_size_per_thread = work_size / g_miner_ctx.params.thread_count;
 
-    uint64_t pass = base_pass;
+    uint64_t pass = g_miner_ctx.params.base_pass;
 
-    for (unsigned int i = 0; i < thread_count; ++i) {
+    for (unsigned int i = 0; i < g_miner_ctx.params.thread_count; ++i) {
         std::shared_ptr<std::thread> thread(new std::thread(
-            mine_address_thread, i, pass, work_size_per_thread, do_v1, clean_output, no_numbers
+            mine_address_thread, i, pass, work_size_per_thread,
+            g_miner_ctx.params.do_v1, g_miner_ctx.params.clean_output, g_miner_ctx.params.no_numbers
         ));
 
-        g_threads.push_back(thread);
+        g_miner_ctx.threads.push_back(thread);
         pass += work_size_per_thread;
     }
 
-    for (auto thread : g_threads) {
+    for (auto thread : g_miner_ctx.threads) {
         thread->join();
     }
 }
@@ -137,20 +137,21 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    bool do_v1 = gen_v1_addresses_arg.getValue();
-    bool clean_output = clean_output_arg.getValue();
-    bool no_numbers = no_numbers_arg.getValue();
+    g_miner_ctx.running = false;
+    g_miner_ctx.params.base_pass = gen_base_pass();
+    g_miner_ctx.params.clean_output = clean_output_arg.getValue();
+    g_miner_ctx.params.do_v1 = gen_v1_addresses_arg.getValue();
+    g_miner_ctx.params.thread_count = thread_count_arg.getValue();
+    g_miner_ctx.params.no_numbers = no_numbers_arg.getValue();
 
-    unsigned int thread_count = thread_count_arg.getValue();
+    if (!g_miner_ctx.params.clean_output) {
+        std::cout << "Mining on " << g_miner_ctx.params.thread_count << " threads..." << std::endl;
 
-    if (!clean_output) {
-        std::cout << "Mining on " << thread_count << " threads..." << std::endl;
-
-        if (no_numbers) {
+        if (g_miner_ctx.params.no_numbers) {
             std::cout << "Ignoring addresses with numbers." << std::endl;
         }
     }
 
-    start_miner(gen_base_pass(), thread_count, do_v1, clean_output, no_numbers);
+    start_miner();
     return 0;
 }
