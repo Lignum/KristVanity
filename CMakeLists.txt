@@ -4,7 +4,7 @@ project(kristvanity)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES src/main.cpp)
+set(SOURCE_FILES src/miner.cpp src/utils.cpp src/krist.cpp)
 add_executable(kristvanity ${SOURCE_FILES})
 
 find_package(OpenSSL REQUIRED)
@@ -21,5 +21,7 @@ find_package(TCLAP REQUIRED)
 if (TCLAP_FOUND)
     include_directories(${TCLAP_INCLUDE_DIR})
 endif()
+
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 install(TARGETS kristvanity RUNTIME DESTINATION bin)

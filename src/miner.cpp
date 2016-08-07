@@ -1,16 +1,12 @@
-#include <openssl/sha.h>
+#include "utils.h"
+#include "krist.h"
+
 #include <tclap/CmdLine.h>
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <fstream>
-#include <algorithm>
 #include <memory>
 #include <thread>
 #include <random>
-#include <sstream>
-#include <cstdio>
+#include <fstream>
 
 std::vector<std::string> g_terms;
 bool g_miner_running = false;
@@ -33,89 +29,6 @@ bool load_terms(const std::string &file) {
     }
 
     return true;
-}
-
-void to_hex_string(uint64_t num, std::string *str) {
-    std::ostringstream ss;
-    ss << std::hex << num;
-    *str = ss.str();
-}
-
-void sha256(const std::string &input, std::string *output) {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-
-    SHA256_CTX ctx;
-    SHA256_Init(&ctx);
-    SHA256_Update(&ctx, input.c_str(), input.length());
-    SHA256_Final(hash, &ctx);
-
-    const size_t output_size = SHA256_DIGEST_LENGTH * 2 + 1;
-    char out_buffer[output_size];
-
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
-        std::sprintf(out_buffer + (i * 2) * sizeof(char), "%02x", hash[i]);
-    }
-
-    *output = std::string(out_buffer);
-}
-
-inline void double_sha256(const std::string &input, std::string *output) {
-    sha256(input, output);
-    sha256(*output, output);
-}
-
-void make_private_key(const std::string &password, std::string *pkey) {
-    sha256("KRISTWALLET" + password, pkey);
-    pkey->append("-000");
-}
-
-char hex_to_base36(int input) {
-    for (int i = 6; i <= 251; i += 7) {
-        if (input <= i) {
-            if (i <= 69) {
-                return (char) ('0' + (i - 6) / 7);
-            }
-
-            return (char) ('a' + ((i - 76) / 7));
-        }
-    }
-
-    return 'e';
-}
-
-void make_v2_address(const std::string &pkey, std::string *address) {
-    *address = "k";
-
-    std::string chars[9];
-    std::string hash;
-    double_sha256(pkey, &hash);
-
-    int i;
-
-    for (i = 0; i < 9; ++i) {
-        chars[i] = hash.substr(0, 2);
-        double_sha256(hash, &hash);
-    }
-
-    for (i = 0; i < 9;) {
-        std::string pair = hash.substr((size_t) (2 * i), 2);
-        int index = std::stoi(pair, nullptr, 16) % 9;
-
-        if (chars[index].empty()) {
-            sha256(hash, &hash);
-        } else {
-            std::string *ch = &chars[index];
-            int nch = std::stoi(*ch, nullptr, 16);
-            *address += hex_to_base36(nch);
-            chars[index] = "";
-            i++;
-        }
-    }
-}
-
-void make_v1_address(const std::string &pkey, std::string *address) {
-    sha256(pkey, address);
-    *address = address->substr(0, 10);
 }
 
 uint64_t gen_base_pass() {
