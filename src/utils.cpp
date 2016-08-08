@@ -4,11 +4,14 @@
 #include <openssl/sha.h>
 
 #include <cstdint>
+#include <cstring>
 #include <sstream>
 #include <iomanip>
 
 void to_hex_string(uint64_t num, std::string *str) {
-
+	std::ostringstream ss;
+	ss << std::hex << std::setfill('0') << std::setw(2) << num;
+	*str = ss.str();
 }
 
 void sha256(const std::string &input, std::string *output) {
@@ -19,7 +22,7 @@ void sha256(const std::string &input, std::string *output) {
     SHA256_Update(&ctx, input.c_str(), input.length());
     SHA256_Final(hash, &ctx);
 
-	*output = "";
+	output->clear();
 
 	for (unsigned int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
 		output->append(byte_to_hex_lookup[hash[i]]);
