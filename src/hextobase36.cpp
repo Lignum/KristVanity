@@ -1,6 +1,6 @@
 #include "hextobase36.h"
 
-const char hex_to_base36_table[252] = {
+const char hex_to_base36_table[256] = {
 	'0', // 0
 	'0', // 1
 	'0', // 2
@@ -253,4 +253,8 @@ const char hex_to_base36_table[252] = {
 	'z', // 249
 	'z', // 250
 	'z', // 251
+	'e', // 252
+	'e', // 253
+	'e', // 254
+	'e', // 255
 };
