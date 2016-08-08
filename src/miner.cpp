@@ -8,7 +8,7 @@
 #include <thread>
 #include <random>
 #include <fstream>
-#include <hdf5.h>
+#include <chrono>
 
 miner_context_t g_miner_ctx;
 
@@ -45,6 +45,10 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
         std::cout << greeting.str() << std::endl;
     }
 
+	auto last_time = std::chrono::system_clock::now();
+	unsigned int addresses_mined = 0;
+	unsigned int addresses_per_second = 0;
+
     for (uint64_t current = base_pass; g_miner_ctx.running && current < base_pass + addr_count; ++current) {
         std::ostringstream ss;
         ss << std::hex << current;
@@ -60,6 +64,16 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
             make_v2_address(pkey, &address);
         }
 
+		addresses_mined++;
+
+		auto now = std::chrono::system_clock::now();
+
+		if ((now - last_time) >= std::chrono::milliseconds(1000)) {
+			addresses_per_second = addresses_mined;
+			addresses_mined = 0;
+			last_time = now;
+		}
+
         if (no_numbers) {
             if (std::find_if(address.begin(), address.end(), ::isdigit) != address.end()) {
                 continue;
@@ -74,7 +88,7 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
                     std::cout << msg.str() << std::endl;
                 } else {
                     std::ostringstream msg;
-                    msg << thread_id << " => " << address << " with pw " << ss.str();
+                    msg << thread_id << " => " << address << " with pw " << ss.str() << " (" << addresses_per_second << " A/s)";
                     std::cout << msg.str() << std::endl;
                 }
             }

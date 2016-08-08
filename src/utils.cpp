@@ -1,14 +1,14 @@
 #include "utils.h"
+#include "bytetohex.h"
 
 #include <openssl/sha.h>
 
 #include <cstdint>
 #include <sstream>
+#include <iomanip>
 
 void to_hex_string(uint64_t num, std::string *str) {
-    std::ostringstream ss;
-    ss << std::hex << num;
-    *str = ss.str();
+
 }
 
 void sha256(const std::string &input, std::string *output) {
@@ -19,14 +19,11 @@ void sha256(const std::string &input, std::string *output) {
     SHA256_Update(&ctx, input.c_str(), input.length());
     SHA256_Final(hash, &ctx);
 
-    const size_t output_size = SHA256_DIGEST_LENGTH * 2 + 1;
-    char out_buffer[output_size];
+	*output = "";
 
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
-        std::sprintf(out_buffer + (i * 2) * sizeof(char), "%02x", hash[i]);
-    }
-
-    *output = std::string(out_buffer);
+	for (unsigned int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+		output->append(byte_to_hex_lookup[hash[i]]);
+	}
 }
 
 char hex_to_base36(int input) {
