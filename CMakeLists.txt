@@ -4,7 +4,25 @@ project(kristvanity)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES src/miner.cpp src/utils.cpp src/krist.cpp src/bytetohex.cpp)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+# Taken from: https://cmake.org/pipermail/cmake/2013-November/056336.html
+macro(group_sources curdir)
+	file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
+	foreach(child ${children})
+		if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+			group_sources(${curdir}/${child})
+		else()
+			string(REPLACE "/" "\\" groupname ${curdir})
+			source_group(${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+		endif()
+	endforeach()
+endmacro()
+
+group_sources("src")
+group_sources("include")
+
+file(GLOB_RECURSE SOURCE_FILES "include/*.h" "include/*.hpp" "src/*.cpp")
 add_executable(kristvanity ${SOURCE_FILES})
 
 find_package(OpenSSL REQUIRED)
