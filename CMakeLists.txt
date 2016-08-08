@@ -4,7 +4,7 @@ project(kristvanity)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES src/miner.cpp src/utils.cpp src/krist.cpp)
+set(SOURCE_FILES src/miner.cpp src/utils.cpp src/krist.cpp src/bytetohex.cpp)
 add_executable(kristvanity ${SOURCE_FILES})
 
 find_package(OpenSSL REQUIRED)
