@@ -40,9 +40,6 @@ void sha256(const char *input, char *output) {
 	SHA256_Final(hash, &ctx);
 
 	for (unsigned int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
-		const char *byte_str = byte_to_hex_lookup[hash[i]];
-		memcpy(&output[i * 2], byte_str, sizeof(char) * 2);
+		memcpy(&output[i * 2], byte_to_hex_lookup[hash[i]], sizeof(char) * 2);
 	}
-
-	output[SHA256_DIGEST_LENGTH * 2] = '\0';
 }
