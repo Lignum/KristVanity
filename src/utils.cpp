@@ -39,8 +39,6 @@ void sha256(const char *input, char *output) {
 	SHA256_Update(&ctx, input, strlen(input));
 	SHA256_Final(hash, &ctx);
 
-	output[0] = '\0';
-
 	for (unsigned int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
 		const char *byte_str = byte_to_hex_lookup[hash[i]];
 		memcpy(&output[i * 2], byte_str, sizeof(char) * 2);
