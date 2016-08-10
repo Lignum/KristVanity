@@ -21,21 +21,21 @@ bool load_terms(const std::string &file) {
     }
 
     std::string line;
-	std::vector<std::string> terms;
+    std::vector<std::string> terms;
 
     while (std::getline(in, line)) {
         if (!line.empty()) {
-			terms.push_back(line);
+            terms.push_back(line);
         }
     }
 
-	g_miner_ctx.term_count = terms.size();
-	g_miner_ctx.terms = new char*[g_miner_ctx.term_count];
-	
-	for (size_t i = 0; i < g_miner_ctx.term_count; ++i) {
-		g_miner_ctx.terms[i] = new char[terms[i].size()];
-		strcpy(g_miner_ctx.terms[i], terms[i].c_str());
-	}
+    g_miner_ctx.term_count = terms.size();
+    g_miner_ctx.terms = new char*[g_miner_ctx.term_count];
+
+    for (size_t i = 0; i < g_miner_ctx.term_count; ++i) {
+        g_miner_ctx.terms[i] = new char[terms[i].size()];
+        strcpy(g_miner_ctx.terms[i], terms[i].c_str());
+    }
 
     return true;
 }
@@ -48,31 +48,31 @@ uint64_t gen_base_pass() {
 }
 
 void mine_speed_count_thread() {
-	while (g_miner_ctx.running) {
-		g_miner_ctx.miner_mutex.lock();
-		std::cout << "Mining at " << g_miner_ctx.addresses_mined << " A/s" << std::endl;
-		g_miner_ctx.miner_mutex.unlock();
+    while (g_miner_ctx.running) {
+        g_miner_ctx.miner_mutex.lock();
+        std::cout << "Mining at " << g_miner_ctx.addresses_mined << " A/s" << std::endl;
+        g_miner_ctx.miner_mutex.unlock();
 
-		g_miner_ctx.addresses_mined = 0;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	}
+        g_miner_ctx.addresses_mined = 0;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 }
 
 void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count, bool do_v1, bool clean_output, bool no_numbers) {
     if (!g_miner_ctx.params.clean_output) {
-		g_miner_ctx.miner_mutex.lock();
-		{
-			std::ostringstream greeting;
-			greeting << "Started thread " << thread_id << ", working from " << std::hex << base_pass << " to " << std::hex
-				<< (base_pass + addr_count);
-			std::cout << greeting.str() << std::endl;
-		}
-		g_miner_ctx.miner_mutex.unlock();
-	}
+        g_miner_ctx.miner_mutex.lock();
+        {
+            std::ostringstream greeting;
+            greeting << "Started thread " << thread_id << ", working from " << std::hex << base_pass << " to " << std::hex
+                     << (base_pass + addr_count);
+            std::cout << greeting.str() << std::endl;
+        }
+        g_miner_ctx.miner_mutex.unlock();
+    }
 
     for (uint64_t current = base_pass; g_miner_ctx.running && current < base_pass + addr_count; ++current) {
-		char current_hex[17];
-		to_hex_string(current, current_hex);
+        char current_hex[17];
+        to_hex_string(current, current_hex);
 
         char pkey[128];
         make_private_key(current_hex, pkey);
@@ -85,7 +85,7 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
             make_v2_address(pkey, address);
         }
 
-		g_miner_ctx.addresses_mined++;
+        g_miner_ctx.addresses_mined++;
 
         if (no_numbers) {
             bool has_number = false;
@@ -103,39 +103,39 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
         }
 
         for (size_t i = 0; i < g_miner_ctx.term_count; ++i) {
-			char *term = g_miner_ctx.terms[i];
+            char *term = g_miner_ctx.terms[i];
 
-			if (strstr(address, term) != nullptr) {
-				g_miner_ctx.miner_mutex.lock();
-				{
-					std::ostringstream msg;
-					msg << address << ":" << current_hex;
+            if (strstr(address, term) != nullptr) {
+                g_miner_ctx.miner_mutex.lock();
+                {
+                    std::ostringstream msg;
+                    msg << address << ":" << current_hex;
 
-					if (clean_output) {
-						std::cout << msg.str() << std::endl;
-					} else {
-						std::ostringstream msg;
-						msg << thread_id << " => " << address << " with pw " << current_hex;
-						std::cout << msg.str() << std::endl;
-					}
+                    if (clean_output) {
+                        std::cout << msg.str() << std::endl;
+                    } else {
+                        std::ostringstream msg;
+                        msg << thread_id << " => " << address << " with pw " << current_hex;
+                        std::cout << msg.str() << std::endl;
+                    }
 
-					if (g_miner_ctx.params.do_logging) {
-						std::ofstream log(g_miner_ctx.params.log_file, std::ios::app);
-						log << msg.str() << std::endl;
-					}
-				}
-				g_miner_ctx.miner_mutex.unlock();
+                    if (g_miner_ctx.params.do_logging) {
+                        std::ofstream log(g_miner_ctx.params.log_file, std::ios::app);
+                        log << msg.str() << std::endl;
+                    }
+                }
+                g_miner_ctx.miner_mutex.unlock();
             }
         }
     }
 }
 
 void cleanup() {
-	for (unsigned int i = 0; i < g_miner_ctx.term_count; ++i) {
-		delete[] g_miner_ctx.terms[i];
-	}
+    for (unsigned int i = 0; i < g_miner_ctx.term_count; ++i) {
+        delete[] g_miner_ctx.terms[i];
+    }
 
-	delete[] g_miner_ctx.terms;
+    delete[] g_miner_ctx.terms;
 }
 
 void start_miner() {
@@ -155,27 +155,27 @@ void start_miner() {
 
     for (unsigned int i = 0; i < g_miner_ctx.params.thread_count; ++i) {
         std::shared_ptr<std::thread> thread(new std::thread(
-            mine_address_thread, i, pass, work_size_per_thread,
-            g_miner_ctx.params.do_v1, g_miner_ctx.params.clean_output, g_miner_ctx.params.no_numbers
+                mine_address_thread, i, pass, work_size_per_thread,
+                g_miner_ctx.params.do_v1, g_miner_ctx.params.clean_output, g_miner_ctx.params.no_numbers
         ));
 
         g_miner_ctx.threads.push_back(thread);
         pass += work_size_per_thread;
     }
 
-	if (!g_miner_ctx.params.clean_output) {
-		std::shared_ptr<std::thread> speed_counter(new std::thread(
-			mine_speed_count_thread
-		));
+    if (!g_miner_ctx.params.clean_output) {
+        std::shared_ptr<std::thread> speed_counter(new std::thread(
+                mine_speed_count_thread
+        ));
 
-		g_miner_ctx.threads.push_back(speed_counter);
-	}
+        g_miner_ctx.threads.push_back(speed_counter);
+    }
 
     for (auto thread : g_miner_ctx.threads) {
         thread->join();
     }
 
-	cleanup();
+    cleanup();
 }
 
 int main(int argc, char **argv) {
@@ -224,6 +224,6 @@ int main(int argc, char **argv) {
     }
 
     start_miner();
-	cleanup();
+    cleanup();
     return 0;
 }

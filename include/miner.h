@@ -17,14 +17,14 @@ struct miner_params_t {
 };
 
 struct miner_context_t {
-	size_t term_count;
+    size_t term_count;
     char **terms;
     bool running;
 
     std::vector<std::shared_ptr<std::thread>> threads;
-	std::mutex miner_mutex;
+    std::mutex miner_mutex;
 
-	uint32_t addresses_mined;
+    uint32_t addresses_mined;
 
     miner_params_t params;
 };
