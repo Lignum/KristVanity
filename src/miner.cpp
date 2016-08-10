@@ -89,13 +89,14 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
 
         if (no_numbers) {
             bool has_number = false;
+			char *addr_ptr = address;
 
-            for (size_t i = 0; i < strlen(address); ++i) {
-                if (isdigit(address[i])) {
-                    has_number = true;
-                    break;
-                }
-            }
+			while (*addr_ptr) {
+				if (isdigit(*addr_ptr++)) {
+					has_number = true;
+					break;
+				}
+			}
 
             if (has_number) {
                 continue;
