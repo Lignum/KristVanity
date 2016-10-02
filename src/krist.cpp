@@ -27,24 +27,30 @@ void make_v2_address(const char *pkey, char address[11]) {
 	for (i = 0; i < 9; ++i) {
 		strncpy(chars[i], hash, 2);
 		chars[i][2] = '\0';
+
 		double_sha256(hash, hash);
 	}
 
+	char pair[3];
+
 	for (i = 0; i < 9;) {
-		char pair[3];
 		strncpy(pair, &hash[2 * i], 2);
+
 		int index = strtol(pair, nullptr, 16) % 9;
 
-		if (strcmp(chars[index], "") == 0) {
-			char temp_hash[SHA256_DIGEST_LENGTH * 2 + 1];
-			sha256(hash, temp_hash);
-			strcpy(hash, temp_hash);
+		if (chars[index][0] == '\0') {
+			sha256(hash, hash);
 		} else {
 			char *ch = chars[index];
 			int nch = strtol(ch, nullptr, 16);
-			char hex_string[2] = { hex_to_base36(nch), '\0' };
+			
+			char hex_string[2] = {
+				hex_to_base36(nch), '\0'
+			};
+
 			strcat(address, hex_string);
-			strcpy(chars[index], "");
+
+			chars[index][0] = '\0';
 			i++;
 		}
 	}

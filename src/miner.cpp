@@ -80,15 +80,27 @@ void notify_address_found(bool clean_output, int thread_id, char *address, char 
 	g_miner_ctx.miner_mutex.unlock();
 }
 
+inline bool string_contains_numbers(char *str) {
+	char *str_ptr = str;
+
+	while (*str_ptr) {
+		if (isdigit(*str_ptr++)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count, bool do_v1, bool clean_output, bool no_numbers) {
 	if (!g_miner_ctx.params.clean_output) {
 		g_miner_ctx.miner_mutex.lock();
-		{
-			std::ostringstream greeting;
-			greeting << "Started thread " << thread_id << ", working from " << std::hex << base_pass << " to " << std::hex
-					 << (base_pass + addr_count);
-			std::cout << greeting.str() << std::endl;
-		}
+
+		std::ostringstream greeting;
+		greeting << "Started thread " << thread_id << ", working from " << std::hex << base_pass << " to " << std::hex
+				 << (base_pass + addr_count);
+		std::cout << greeting.str() << std::endl;
+
 		g_miner_ctx.miner_mutex.unlock();
 	}
 
@@ -96,10 +108,10 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
 		char current_hex[17];
 		to_hex_string(current, current_hex);
 
-		char pkey[128];
+		char pkey[KST_PRIVATEKEY_LENGTH];
 		make_private_key(current_hex, pkey);
 
-		char address[11];
+		char address[KST_ADDRESS_LENGTH + 1];
 
 		if (do_v1) {
 			make_v1_address(pkey, address);
@@ -109,22 +121,10 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
 
 		g_miner_ctx.addresses_mined++;
 
-		if (no_numbers) {
-			char *addr_ptr = address;
-
-			while (*addr_ptr) {
-				if (isdigit(*addr_ptr++)) {
-					goto has_number;
-				}
-			}
-
-			goto has_no_number;
-
-		has_number:;
+		if (no_numbers && string_contains_numbers(address)) {
 			continue;
 		}
 
-	has_no_number:;
 		for (size_t i = 0; i < g_miner_ctx.term_count; ++i) {
 			char *term = g_miner_ctx.terms[i];
 
