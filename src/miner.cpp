@@ -58,6 +58,28 @@ void mine_speed_count_thread() {
 	}
 }
 
+void notify_address_found(bool clean_output, int thread_id, char *address, char *current_hex) {
+	g_miner_ctx.miner_mutex.lock();
+	
+	std::ostringstream msg;
+	msg << address << ":" << current_hex;
+
+	if (clean_output) {
+		std::cout << msg.str() << std::endl;
+	} else {
+		std::ostringstream msg;
+		msg << thread_id << " => " << address << " with pw " << current_hex;
+		std::cout << msg.str() << std::endl;
+	}
+
+	if (g_miner_ctx.params.do_logging) {
+		std::ofstream log(g_miner_ctx.params.log_file, std::ios::app);
+		log << msg.str() << std::endl;
+	}
+
+	g_miner_ctx.miner_mutex.unlock();
+}
+
 void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count, bool do_v1, bool clean_output, bool no_numbers) {
 	if (!g_miner_ctx.params.clean_output) {
 		g_miner_ctx.miner_mutex.lock();
@@ -88,44 +110,26 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
 		g_miner_ctx.addresses_mined++;
 
 		if (no_numbers) {
-			bool has_number = false;
 			char *addr_ptr = address;
 
 			while (*addr_ptr) {
 				if (isdigit(*addr_ptr++)) {
-					has_number = true;
-					break;
+					goto has_number;
 				}
 			}
 
-			if (has_number) {
-				continue;
-			}
+			goto has_no_number;
+
+		has_number:;
+			continue;
 		}
 
+	has_no_number:;
 		for (size_t i = 0; i < g_miner_ctx.term_count; ++i) {
 			char *term = g_miner_ctx.terms[i];
 
 			if (strstr(address, term) != nullptr) {
-				g_miner_ctx.miner_mutex.lock();
-				{
-					std::ostringstream msg;
-					msg << address << ":" << current_hex;
-
-					if (clean_output) {
-						std::cout << msg.str() << std::endl;
-					} else {
-						std::ostringstream msg;
-						msg << thread_id << " => " << address << " with pw " << current_hex;
-						std::cout << msg.str() << std::endl;
-					}
-
-					if (g_miner_ctx.params.do_logging) {
-						std::ofstream log(g_miner_ctx.params.log_file, std::ios::app);
-						log << msg.str() << std::endl;
-					}
-				}
-				g_miner_ctx.miner_mutex.unlock();
+				notify_address_found(clean_output, thread_id, address, current_hex);
 			}
 		}
 	}
