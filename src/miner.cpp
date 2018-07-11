@@ -183,7 +183,7 @@ void start_miner() {
 }
 
 int main(int argc, char **argv) {
-	TCLAP::CmdLine cmd("Generates Krist addresses from a set of input strings.", ' ', "0.1");
+	TCLAP::CmdLine cmd("Generates Krist addresses from a set of input strings.", ' ', "0.2");
 	TCLAP::ValueArg<std::string> file_arg("i", "input", "A simple text file containing terms to look for in each line.", false, "terms.txt", "string");
 	cmd.add(file_arg);
 
