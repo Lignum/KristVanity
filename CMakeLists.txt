@@ -22,7 +22,7 @@ endmacro()
 group_sources("src")
 group_sources("include")
 
-file(GLOB_RECURSE SOURCE_FILES "include/*.h" "include/*.hpp" "src/*.cpp")
+file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
 add_executable(kristvanity ${SOURCE_FILES})
 
 find_package(OpenSSL REQUIRED)
@@ -39,7 +39,5 @@ find_package(TCLAP REQUIRED)
 if (TCLAP_FOUND)
     include_directories(${TCLAP_INCLUDE_DIR})
 endif()
-
-include_directories(${CMAKE_SOURCE_DIR}/include)
 
 install(TARGETS kristvanity RUNTIME DESTINATION bin)

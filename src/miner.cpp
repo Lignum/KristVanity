@@ -4,6 +4,7 @@
 
 #include <tclap/CmdLine.h>
 
+#include <atomic>
 #include <memory>
 #include <thread>
 #include <random>
