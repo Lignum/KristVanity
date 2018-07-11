@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.6)
 project(kristvanity)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
@@ -29,7 +29,7 @@ find_package(OpenSSL REQUIRED)
 
 if (OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
-    target_link_libraries(kristvanity ${OPENSSL_LIBRARIES})
+    target_link_libraries(kristvanity ${OPENSSL_CRYPTO_LIBRARY})
 endif()
 
 find_package(Threads REQUIRED)
