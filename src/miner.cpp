@@ -60,7 +60,7 @@ void mine_speed_count_thread() {
 }
 
 void notify_address_found(bool clean_output, int thread_id, char *address, char *current_hex) {
-	g_miner_ctx.miner_mutex.lock();
+	std::lock_guard<std::mutex> lock(g_miner_ctx.miner_mutex);
 	
 	std::ostringstream msg;
 	msg << address << ":" << current_hex;
@@ -77,8 +77,6 @@ void notify_address_found(bool clean_output, int thread_id, char *address, char 
 		std::ofstream log(g_miner_ctx.params.log_file, std::ios::app);
 		log << msg.str() << std::endl;
 	}
-
-	g_miner_ctx.miner_mutex.unlock();
 }
 
 inline bool string_contains_numbers(char *str) {
