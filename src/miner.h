@@ -18,8 +18,7 @@ struct miner_params_t {
 };
 
 struct miner_context_t {
-	size_t term_count;
-	char **terms;
+	std::vector<std::string> terms;
 	bool running;
 
 	std::vector<std::shared_ptr<std::thread>> threads;

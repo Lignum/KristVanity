@@ -22,20 +22,11 @@ bool load_terms(const std::string &file) {
 	}
 
 	std::string line;
-	std::vector<std::string> terms;
 
 	while (std::getline(in, line)) {
 		if (!line.empty()) {
-			terms.push_back(line);
+			g_miner_ctx.terms.push_back(line);
 		}
-	}
-
-	g_miner_ctx.term_count = terms.size();
-	g_miner_ctx.terms = new char*[g_miner_ctx.term_count];
-
-	for (size_t i = 0; i < g_miner_ctx.term_count; ++i) {
-		g_miner_ctx.terms[i] = new char[terms[i].size()];
-		strcpy(g_miner_ctx.terms[i], terms[i].c_str());
 	}
 
 	return true;
@@ -124,22 +115,12 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
 			continue;
 		}
 
-		for (size_t i = 0; i < g_miner_ctx.term_count; ++i) {
-			char *term = g_miner_ctx.terms[i];
-
-			if (strstr(address, term) != nullptr) {
+		for (auto term : g_miner_ctx.terms) {
+			if (strstr(address, term.c_str()) != nullptr) {
 				notify_address_found(clean_output, thread_id, address, current_hex);
 			}
 		}
 	}
-}
-
-void cleanup() {
-	for (unsigned int i = 0; i < g_miner_ctx.term_count; ++i) {
-		delete[] g_miner_ctx.terms[i];
-	}
-
-	delete[] g_miner_ctx.terms;
 }
 
 void start_miner() {
@@ -178,8 +159,6 @@ void start_miner() {
 	for (auto thread : g_miner_ctx.threads) {
 		thread->join();
 	}
-
-	cleanup();
 }
 
 int main(int argc, char **argv) {
@@ -228,6 +207,5 @@ int main(int argc, char **argv) {
 	}
 
 	start_miner();
-	cleanup();
 	return 0;
 }
