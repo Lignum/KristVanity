@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.6)
 project(kristvanity)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
@@ -22,14 +22,14 @@ endmacro()
 group_sources("src")
 group_sources("include")
 
-file(GLOB_RECURSE SOURCE_FILES "include/*.h" "include/*.hpp" "src/*.cpp")
+file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
 add_executable(kristvanity ${SOURCE_FILES})
 
 find_package(OpenSSL REQUIRED)
 
 if (OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
-    target_link_libraries(kristvanity ${OPENSSL_LIBRARIES})
+    target_link_libraries(kristvanity ${OPENSSL_CRYPTO_LIBRARY})
 endif()
 
 find_package(Threads REQUIRED)
@@ -39,7 +39,5 @@ find_package(TCLAP REQUIRED)
 if (TCLAP_FOUND)
     include_directories(${TCLAP_INCLUDE_DIR})
 endif()
-
-include_directories(${CMAKE_SOURCE_DIR}/include)
 
 install(TARGETS kristvanity RUNTIME DESTINATION bin)
