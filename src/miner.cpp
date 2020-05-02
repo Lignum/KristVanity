@@ -95,7 +95,7 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
 	}
 
 	for (uint64_t current = base_pass; g_miner_ctx.running && current < base_pass + addr_count; ++current) {
-		char current_hex[17];
+		char current_hex[33];
 		to_hex_string(current, current_hex);
 
 		char pkey[KST_PRIVATEKEY_LENGTH];
@@ -125,7 +125,7 @@ void mine_address_thread(int thread_id, uint64_t base_pass, uint64_t addr_count,
 
 void start_miner() {
 	if (!g_miner_ctx.params.clean_output) {
-		char base_pass_str[17];
+		char base_pass_str[33];
 		to_hex_string(g_miner_ctx.params.base_pass, base_pass_str);
 		std::cout << "Using \"" << base_pass_str << "\" as base\n";
 	}
